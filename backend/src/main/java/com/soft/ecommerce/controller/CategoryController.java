@@ -1,13 +1,14 @@
 package com.soft.ecommerce.controller;
 
 import com.soft.ecommerce.model.Category;
+import com.soft.ecommerce.payload.CategoryDTO;
+import com.soft.ecommerce.payload.CategoryResponse;
 import com.soft.ecommerce.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/ecomApi")
@@ -20,26 +21,27 @@ public class CategoryController {
     }
 
     @GetMapping("/public/categories")
-    public ResponseEntity<List<Category>> getAll(){
-         return ResponseEntity.status(HttpStatus.OK).body(categoryService.getAll());
+    public ResponseEntity<CategoryResponse> getAll(){
+        CategoryResponse categories = categoryService.getAll();
+        return ResponseEntity.status(HttpStatus.OK).body(categories);
     }
 
     @PostMapping("/admin/categories")
-    public ResponseEntity<String> add(@Valid @RequestBody Category category){
-        this.categoryService.add(category);
-        return ResponseEntity.status(HttpStatus.CREATED).body(category.toString());
+    public ResponseEntity<CategoryDTO> add(@Valid @RequestBody CategoryDTO categoryDTO){
+        CategoryDTO addedCategoryDTO = this.categoryService.add(categoryDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(addedCategoryDTO);
     }
 
     @DeleteMapping("/admin/categories/{id}")
-    public String delete(@PathVariable Long id){
-        this.categoryService.delete(id);
-        return "success delete";
+    public ResponseEntity<CategoryDTO> delete(@PathVariable Long id){
+        CategoryDTO deletedCategory = categoryService.delete(id);
+        return ResponseEntity.status(HttpStatus.OK).body(deletedCategory);
     }
 
     @PutMapping("/admin/categories/{id}")
-    public String update(@PathVariable Long id, @RequestBody Category category){
-        this.categoryService.update(id, category);
-        return "success update";
+    public ResponseEntity<CategoryDTO> update(@PathVariable Long id, @Valid @RequestBody CategoryDTO categoryDTO){
+        CategoryDTO updatedCategoryDTO = categoryService.update(id, categoryDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedCategoryDTO);
     }
 
 }

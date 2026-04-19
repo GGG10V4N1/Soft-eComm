@@ -1,12 +1,11 @@
 package com.soft.ecommerce.service;
 
-import com.soft.ecommerce.model.Category;
-
-import java.util.List;
+import com.soft.ecommerce.payload.CategoryDTO;
+import com.soft.ecommerce.payload.CategoryResponse;
 
 public interface CategoryService {
-    List<Category> getAll();
-    void add(Category category);
-    void delete(Long id);
-    void update(Long id, Category category);
+    CategoryResponse getAll();
+    CategoryDTO add(CategoryDTO categoryDTO);
+    CategoryDTO delete(Long id);
+    CategoryDTO update(Long id, CategoryDTO categoryDTO);
 }
