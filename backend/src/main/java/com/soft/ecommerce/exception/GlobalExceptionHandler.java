@@ -1,5 +1,6 @@
 package com.soft.ecommerce.exception;
 
+import com.soft.ecommerce.payload.APIResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -24,15 +25,15 @@ public class GlobalExceptionHandler{
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<String> handleResourceNotFoundException(ResourceNotFoundException e) {
-        String message = e.getMessage();
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message);
+    public ResponseEntity<APIResponse> handleResourceNotFoundException(ResourceNotFoundException e) {
+        APIResponse response = new APIResponse(e.getMessage(), false);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(APIException.class)
-    public ResponseEntity<String> myAPIException(APIException e) {
-        String message = e.getMessage();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+    public ResponseEntity<APIResponse> myAPIException(APIException e) {
+        APIResponse response = new APIResponse(e.getMessage(), false);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
 }
