@@ -2,18 +2,18 @@ package com.soft.ecommerce.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
     private Long fieldId;
-    private String fieldName;
+    private String fieldContent;
     private String field;
     private String entityName;
 
     public ResourceNotFoundException() {
     }
 
-    public ResourceNotFoundException(String entityName, String field, String fieldName) {
-        super(String.format("NOT FOUND %s WITH %s : %s", entityName, field, fieldName));
+    public ResourceNotFoundException(String entityName, String field, String fieldContent) {
+        super(String.format("NOT FOUND %s WITH %s : %s", entityName, field, fieldContent));
         this.entityName = entityName;
         this.field = field;
-        this.fieldName = fieldName;
+        this.fieldContent = fieldContent;
     }
 
     public ResourceNotFoundException(String entityName, String field, Long fieldId) {

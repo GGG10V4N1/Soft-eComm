@@ -1,19 +1,24 @@
 package com.soft.ecommerce.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "CATEGORY")
+import java.util.List;
+
+@Entity
+@Table(name = "category")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Category {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id ;
-    //@NotBlank(message = "CATEGORY NAME MUST NOT BE BLANK")
+
     private String name;
+
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    private List<Product> products;
 }
