@@ -5,9 +5,13 @@ import com.soft.ecommerce.exception.ResourceNotFoundException;
 import com.soft.ecommerce.model.Category;
 import com.soft.ecommerce.model.Product;
 import com.soft.ecommerce.payload.ProductDTO;
+import com.soft.ecommerce.payload.ProductResponse;
 import com.soft.ecommerce.repository.CategoryRepository;
 import com.soft.ecommerce.repository.ProductRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,7 +32,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO add(Long categoryId, ProductDTO productDTO) {
         Category category = this.categoryRepository.findById(categoryId)
-                            .orElseThrow( () -> new ResourceNotFoundException("Category", "id", categoryId) );
+                                .orElseThrow( () -> new ResourceNotFoundException("Category", "id", categoryId) );
 
         List<Product> products = category.getProducts();
 
@@ -40,12 +44,22 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Product product = modelMapper.map(productDTO, Product.class);
-        product.setImage("default.png");
+        //product.setImage("default.png");
         product.setCategory(category);
         //setUser
-        Double specialPrice = product.getPrice() - ( product.getDiscount() * 0.01 * product.getPrice() );
-        product.setSpecialPrice(specialPrice); //could be set on the requestbody
+        //Double specialPrice = product.getPrice() - ( product.getDiscount() * 0.01 * product.getPrice() );
+        //product.setSpecialPrice(specialPrice); //could be set on the requestbody
         Product addedProduct = productRepository.save(product);
         return modelMapper.map(addedProduct, ProductDTO.class);
+    }
+
+    @Override
+    public ProductResponse getAll(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, String keyword, String category) {
+        Sort sortContent = sortOrder.equalsIgnoreCase("asc") ?
+                           Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        Pageable pageDetails = PageRequest.of(pageNumber,pageSize,sortContent);
+
+        return null;
     }
 }
