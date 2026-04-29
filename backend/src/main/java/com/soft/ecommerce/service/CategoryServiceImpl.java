@@ -29,10 +29,10 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse getAll(Integer pageNumber, Integer pageSize,String sortBy, String sortOrder) {
-        Sort sortContent = sortOrder.equalsIgnoreCase("asc") ?
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ?
                            Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
-        Pageable pageDetails = PageRequest.of(pageNumber,pageSize,sortContent);
+        Pageable pageDetails = PageRequest.of(pageNumber,pageSize,sortByAndOrder);
         Page<Category> categoryPage = categoryRepository.findAll(pageDetails);
         List<Category> categories = categoryPage.getContent();
 
@@ -41,7 +41,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         List<CategoryDTO> categoryDTOS = categories.stream()
-                                                   .map(category -> modelMapper.map(category, CategoryDTO.class))
+                                                   .map(c -> modelMapper.map(c, CategoryDTO.class))
                                                    .toList();
         return new CategoryResponse(categoryDTOS,
                                     categoryPage.getTotalElements(),

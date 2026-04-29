@@ -9,11 +9,13 @@ import com.soft.ecommerce.payload.ProductResponse;
 import com.soft.ecommerce.repository.CategoryRepository;
 import com.soft.ecommerce.repository.ProductRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -55,11 +57,26 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse getAll(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, String keyword, String category) {
-        Sort sortContent = sortOrder.equalsIgnoreCase("asc") ?
-                           Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ?
+                              Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
-        Pageable pageDetails = PageRequest.of(pageNumber,pageSize,sortContent);
+        Pageable pageDetails = PageRequest.of(pageNumber,pageSize,sortByAndOrder);
+        Page<Product> productPage =  productRepository.findAll(pageDetails);
+        List<Product> products = productPage.getContent();
 
-        return null;
+        if(products.isEmpty()){
+            throw new APIException("NO PRODUCTS HAVE BEEN ADDED YET");
+        }
+
+        List<ProductDTO> productDTOS = products.stream()
+                                               .map(p -> modelMapper.map(p, ProductDTO.class))
+                                               .toList();
+
+        return new ProductResponse(productDTOS,
+                                   productPage.getTotalElements(),
+                                   productPage.getSize(),
+                                   productPage.getNumber(),
+                                   productPage.getTotalPages(),
+                                   productPage.isLast());
     }
 }
