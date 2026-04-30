@@ -1,5 +1,9 @@
 package com.soft.ecommerce.payload;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,11 +13,26 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductDTO {
     private Long id;
-    private String description;
-    private Double discount;
-    private String image;
-    private Double price;
+
+    @NotBlank
     private String name;
+
+    private String description;
+
+    @NotNull
+    @PositiveOrZero
     private Integer stock;
+
+    @NotNull
+    @PositiveOrZero
+    private Double price;
+
+    @PositiveOrZero
     private Double specialPrice;
+
+    @PositiveOrZero
+    @Max(100)
+    private Double discount;
+
+    private String image;
 }

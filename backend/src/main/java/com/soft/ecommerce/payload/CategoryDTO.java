@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CategoryDTO {
     private Long id;
-    @NotBlank(message = "CATEGORY NAME MUST NOT BE BLANK")
+    @NotBlank
     private String name;
 }

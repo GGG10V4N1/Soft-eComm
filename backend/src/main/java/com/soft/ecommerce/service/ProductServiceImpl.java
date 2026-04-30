@@ -13,9 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -48,9 +48,14 @@ public class ProductServiceImpl implements ProductService {
         Product product = modelMapper.map(productDTO, Product.class);
         //product.setImage("default.png");
         product.setCategory(category);
+        if(product.getDiscount() == null) product.setDiscount(0.0);
         //setUser
-        //Double specialPrice = product.getPrice() - ( product.getDiscount() * 0.01 * product.getPrice() );
-        //product.setSpecialPrice(specialPrice); //could be set on the requestbody
+        if(product.getSpecialPrice() == null){ //auto specialPrice
+            Double specialPrice = product.getPrice() - ( product.getDiscount() * 0.01 * product.getPrice() );
+            product.setSpecialPrice(specialPrice);
+        }
+
+
         Product addedProduct = productRepository.save(product);
         return modelMapper.map(addedProduct, ProductDTO.class);
     }
@@ -61,6 +66,7 @@ public class ProductServiceImpl implements ProductService {
                               Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         Pageable pageDetails = PageRequest.of(pageNumber,pageSize,sortByAndOrder);
+        Specification<Product> spec = (root, cq, cb) -> cb.conjunction();
         Page<Product> productPage =  productRepository.findAll(pageDetails);
         List<Product> products = productPage.getContent();
 
