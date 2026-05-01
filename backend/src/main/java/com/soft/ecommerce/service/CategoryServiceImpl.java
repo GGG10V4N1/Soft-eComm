@@ -28,7 +28,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryResponse getAll(Integer pageNumber, Integer pageSize,String sortBy, String sortOrder) {
+    public CategoryResponse findAllCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ?
                            Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
@@ -39,44 +39,47 @@ public class CategoryServiceImpl implements CategoryService {
         if(categories.isEmpty()) throw new APIException("NO CATEGORIES HAVE BEEN ADDED YET");
 
         List<CategoryDTO> categoryDTOS = categories.stream()
-                                                   .map((c) -> modelMapper.map(c, CategoryDTO.class))
+                                                   .map(c -> modelMapper.map(c, CategoryDTO.class))
                                                    .toList();
-        return new CategoryResponse(categoryDTOS,
-                                    categoryPage.getTotalElements(),
-                                    categoryPage.getSize(),
-                                    categoryPage.getNumber(),
-                                    categoryPage.getTotalPages(),
-                                    categoryPage.isLast());
+
+        return CategoryResponse.builder()
+                               .content(categoryDTOS)
+                               .totalElements(categoryPage.getTotalElements())
+                               .pageSize(categoryPage.getSize())
+                               .pageNumber(categoryPage.getNumber())
+                               .totalPages(categoryPage.getTotalPages())
+                               .lastPage(categoryPage.isLast())
+                               .build();
     }
 
     @Override
-    public CategoryDTO add(CategoryDTO categoryDTO) {
+    public CategoryDTO addCategory(CategoryDTO categoryDTO) {
         Category category = modelMapper.map(categoryDTO, Category.class);
-        Optional<Category> savedCategory = this.categoryRepository.findByNameIgnoreCase(category.getName());
+        Optional<Category> savedCategory = categoryRepository.findByNameIgnoreCase(category.getName());
         if(savedCategory.isPresent()) {
             throw new APIException("Category with name: " + categoryDTO.getName() + " already exists");
         }
-        Category categoryAdded = this.categoryRepository.save(category);
-        return this.modelMapper.map(categoryAdded, CategoryDTO.class);
+        Category categoryAdded = categoryRepository.save(category);
+        return modelMapper.map(categoryAdded, CategoryDTO.class);
     }
 
     @Override
-    public CategoryDTO delete(Long id) {
-        Category foundedCategory = this.categoryRepository
-                                       .findById(id)
-                                       .orElseThrow( () -> new ResourceNotFoundException("CATEGORY", "id", id) );
+    public CategoryDTO deleteCategory(Long id) {
+        Category foundedCategory = categoryRepository
+                                   .findById(id)
+                                   .orElseThrow( () -> new ResourceNotFoundException("CATEGORY", "id", id) );
         categoryRepository.delete(foundedCategory);
         return modelMapper.map(foundedCategory, CategoryDTO.class);
     }
 
     @Override
-    public CategoryDTO update(Long id, CategoryDTO categoryDTO) {
-        Category foundedCategory = this.categoryRepository
-                                     .findById(id)
-                                     .orElseThrow( () -> new ResourceNotFoundException("CATEGORY", "id", id) );
+    public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO) {
+        Category foundedCategory = categoryRepository
+                                   .findById(id)
+                                   .orElseThrow( () -> new ResourceNotFoundException("CATEGORY", "id", id) );
         Category categoryToSave = modelMapper.map(categoryDTO, Category.class);
         categoryToSave.setId(id); //saving the original id. the param category already has the new info
-        Category updatedCategory = this.categoryRepository.save(categoryToSave);
+        Category updatedCategory = categoryRepository.save(categoryToSave);
         return modelMapper.map(updatedCategory, CategoryDTO.class);
     }
 }

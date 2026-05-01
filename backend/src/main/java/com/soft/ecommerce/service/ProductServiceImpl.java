@@ -26,7 +26,6 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
-
     @Value("${image.base.url}")
     private String imageBaseUrl;
 
@@ -37,15 +36,20 @@ public class ProductServiceImpl implements ProductService {
         this.modelMapper = modelMapper;
     }
 
+    private String constructImageUrl(String imageName) {
+        return imageBaseUrl.endsWith("/") ? imageBaseUrl + imageName : imageBaseUrl + "/" + imageName;
+    }
+
     @Override
-    public ProductDTO add(Long categoryId, ProductDTO productDTO) {
-        Category category = this.categoryRepository.findById(categoryId)
-                                .orElseThrow( () -> new ResourceNotFoundException("Category", "id", categoryId) );
+    public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
+        Category category = categoryRepository
+                            .findById(categoryId)
+                            .orElseThrow( () -> new ResourceNotFoundException("Category", "id", categoryId) );
 
         List<Product> products = category.getProducts();
 
         boolean isProductPresent = products.stream()
-                                           .anyMatch((p) -> p.getName().equalsIgnoreCase(productDTO.getName()) );
+                                           .anyMatch(p -> p.getName().equalsIgnoreCase(productDTO.getName()) );
 
         if(isProductPresent) {
             throw new APIException("Product with name " + productDTO.getName() + " already exists in category " + category.getName());
@@ -61,27 +65,25 @@ public class ProductServiceImpl implements ProductService {
             product.setSpecialPrice(specialPrice);
         }
 
-
         Product addedProduct = productRepository.save(product);
         return modelMapper.map(addedProduct, ProductDTO.class);
     }
 
     @Override
-    public ProductResponse getAll(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, String keyword, String category) {
+    public ProductResponse findAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, String keyword, String category) {
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ?
                               Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         Pageable pageDetails = PageRequest.of(pageNumber,pageSize,sortByAndOrder);
         Specification<Product> spec = (root, cq, cb) -> cb.conjunction();
 
-        if(keyword != null && !keyword.isEmpty() ) {
+        if ( category != null && !category.isEmpty() ) {
+            spec = spec.and((root, cq, cb) ->
+                            cb.like(root.get("category").get("name"), category));
+        }
+        if( keyword != null && !keyword.isEmpty() ) {
             spec = spec.and( (root, cq, cb) ->
                               cb.like(cb.lower(root.get("name")), "%" + keyword.toLowerCase() + "%"));
-
-        }
-        if (category != null && !category.isEmpty() ) {
-            spec = spec.and((root, cq, cb) ->
-                              cb.like(root.get("category").get("name"), category));
         }
 
         Page<Product> productPage =  productRepository.findAll(spec, pageDetails);
@@ -97,15 +99,44 @@ public class ProductServiceImpl implements ProductService {
                                                })
                                                .toList();
 
-        return new ProductResponse(productDTOS,
-                                   productPage.getTotalElements(),
-                                   productPage.getSize(),
-                                   productPage.getNumber(),
-                                   productPage.getTotalPages(),
-                                   productPage.isLast());
+        return ProductResponse.builder()
+                              .totalElements(productPage.getTotalElements())
+                              .pageSize(productPage.getSize())
+                              .pageNumber(productPage.getNumber())
+                              .totalPages(productPage.getTotalPages())
+                              .lastPage(productPage.isLast())
+                              .content(productDTOS)
+                              .build();
     }
 
-    private String constructImageUrl(String imageName) {
-        return imageBaseUrl.endsWith("/") ? imageBaseUrl + imageName : imageBaseUrl + "/" + imageName;
+    @Override
+    public ProductResponse findProductsByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy,
+                                                  String sortOrder) {
+        Category category = categoryRepository
+                            .findById(categoryId)
+                            .orElseThrow( () -> new ResourceNotFoundException("Category", "id", categoryId) );
+
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ?
+                              Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        Pageable pageDetails = PageRequest.of(pageNumber,pageSize,sortByAndOrder);
+        Page<Product> productPage = productRepository.findByCategoryOrderByPriceAsc(category, pageDetails);
+        List<Product> products = productPage.getContent();
+
+        if(products.isEmpty())  throw new APIException(category.getName() + " doesn't have any products yet");
+
+        List<ProductDTO> productDTOS = products.stream()
+                                               .map( p -> modelMapper.map(p, ProductDTO.class) )
+                                               .toList();
+
+        return ProductResponse.builder()
+                              .totalElements(productPage.getTotalElements())
+                              .pageSize(productPage.getSize())
+                              .pageNumber(productPage.getNumber())
+                              .totalPages(productPage.getTotalPages())
+                              .lastPage(productPage.isLast())
+                              .content(productDTOS)
+                              .build();
     }
+
 }
