@@ -36,12 +36,10 @@ public class CategoryServiceImpl implements CategoryService {
         Page<Category> categoryPage = categoryRepository.findAll(pageDetails);
         List<Category> categories = categoryPage.getContent();
 
-        if(categories.isEmpty()) {
-            throw new APIException("NO CATEGORIES HAVE BEEN ADDED YET");
-        }
+        if(categories.isEmpty()) throw new APIException("NO CATEGORIES HAVE BEEN ADDED YET");
 
         List<CategoryDTO> categoryDTOS = categories.stream()
-                                                   .map(c -> modelMapper.map(c, CategoryDTO.class))
+                                                   .map((c) -> modelMapper.map(c, CategoryDTO.class))
                                                    .toList();
         return new CategoryResponse(categoryDTOS,
                                     categoryPage.getTotalElements(),

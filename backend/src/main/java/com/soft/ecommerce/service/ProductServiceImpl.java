@@ -9,6 +9,7 @@ import com.soft.ecommerce.payload.ProductResponse;
 import com.soft.ecommerce.repository.CategoryRepository;
 import com.soft.ecommerce.repository.ProductRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,11 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
+
+    @Value("${image.base.url}")
+    private String imageBaseUrl;
+
+
     public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, ModelMapper modelMapper) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
@@ -39,7 +45,7 @@ public class ProductServiceImpl implements ProductService {
         List<Product> products = category.getProducts();
 
         boolean isProductPresent = products.stream()
-                                           .anyMatch(p -> p.getName().equalsIgnoreCase(productDTO.getName()) );
+                                           .anyMatch((p) -> p.getName().equalsIgnoreCase(productDTO.getName()) );
 
         if(isProductPresent) {
             throw new APIException("Product with name " + productDTO.getName() + " already exists in category " + category.getName());
@@ -67,15 +73,28 @@ public class ProductServiceImpl implements ProductService {
 
         Pageable pageDetails = PageRequest.of(pageNumber,pageSize,sortByAndOrder);
         Specification<Product> spec = (root, cq, cb) -> cb.conjunction();
-        Page<Product> productPage =  productRepository.findAll(pageDetails);
-        List<Product> products = productPage.getContent();
 
-        if(products.isEmpty()){
-            throw new APIException("NO PRODUCTS HAVE BEEN ADDED YET");
+        if(keyword != null && !keyword.isEmpty() ) {
+            spec = spec.and( (root, cq, cb) ->
+                              cb.like(cb.lower(root.get("name")), "%" + keyword.toLowerCase() + "%"));
+
+        }
+        if (category != null && !category.isEmpty() ) {
+            spec = spec.and((root, cq, cb) ->
+                              cb.like(root.get("category").get("name"), category));
         }
 
+        Page<Product> productPage =  productRepository.findAll(spec, pageDetails);
+        List<Product> products = productPage.getContent();
+
+        if(products.isEmpty())  throw new APIException("NO PRODUCTS HAVE BEEN ADDED YET");
+
         List<ProductDTO> productDTOS = products.stream()
-                                               .map(p -> modelMapper.map(p, ProductDTO.class))
+                                               .map(p -> {
+                                                   ProductDTO dto = modelMapper.map(p, ProductDTO.class);
+                                                   dto.setImage(constructImageUrl(p.getImage()));
+                                                   return dto;
+                                               })
                                                .toList();
 
         return new ProductResponse(productDTOS,
@@ -84,5 +103,9 @@ public class ProductServiceImpl implements ProductService {
                                    productPage.getNumber(),
                                    productPage.getTotalPages(),
                                    productPage.isLast());
+    }
+
+    private String constructImageUrl(String imageName) {
+        return imageBaseUrl.endsWith("/") ? imageBaseUrl + imageName : imageBaseUrl + "/" + imageName;
     }
 }
