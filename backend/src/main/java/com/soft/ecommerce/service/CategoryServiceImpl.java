@@ -6,15 +6,13 @@ import com.soft.ecommerce.model.Category;
 import com.soft.ecommerce.payload.CategoryDTO;
 import com.soft.ecommerce.payload.CategoryResponse;
 import com.soft.ecommerce.repository.CategoryRepository;
+import com.soft.ecommerce.utils.RefactorMethods;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -29,10 +27,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse findAllCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ?
-                           Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-
-        Pageable pageDetails = PageRequest.of(pageNumber,pageSize,sortByAndOrder);
+        Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
         Page<Category> categoryPage = categoryRepository.findAll(pageDetails);
         List<Category> categories = categoryPage.getContent();
 
@@ -55,10 +50,10 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDTO addCategory(CategoryDTO categoryDTO) {
         Category category = modelMapper.map(categoryDTO, Category.class);
-        Optional<Category> savedCategory = categoryRepository.findByNameIgnoreCase(category.getName());
-        if(savedCategory.isPresent()) {
-            throw new APIException("Category with name: " + categoryDTO.getName() + " already exists");
-        }
+        categoryRepository.findByNameIgnoreCase(category.getName())
+                          .ifPresent(c -> {
+                              throw new APIException("Category with name: " + c.getName() + " already exists");
+                          });
         Category categoryAdded = categoryRepository.save(category);
         return modelMapper.map(categoryAdded, CategoryDTO.class);
     }
