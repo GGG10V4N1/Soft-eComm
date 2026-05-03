@@ -16,21 +16,21 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private String description;
-    private Double discount;
-    private String image;
-    private Double price;
     private String name;
+    private String description;
     private Integer stock;
+    private Double price;
+    private Double discount;
     private Double specialPrice;
+    private String image;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
 
-    //@ManyToOne
-    //@JoinColumn(name = "seller_id")
-    //private User user;
+    @ManyToOne
+    @JoinColumn(name = "seller_id")
+    private User user;
 
 
 
