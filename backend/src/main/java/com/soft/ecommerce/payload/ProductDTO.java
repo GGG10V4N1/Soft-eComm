@@ -17,6 +17,7 @@ public class ProductDTO {
     @NotBlank
     private String name;
 
+    @NotNull
     private String description;
 
     @NotNull
@@ -33,6 +34,7 @@ public class ProductDTO {
     @PositiveOrZero
     @Max(100)
     private Double discount;
+
 
     private String image;
 }

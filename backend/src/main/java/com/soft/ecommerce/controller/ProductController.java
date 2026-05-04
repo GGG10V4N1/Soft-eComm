@@ -22,7 +22,7 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PostMapping("/admin/categories/{categoryId}/product")// finished
+    @PostMapping("/admin/categories/{categoryId}/product")// without user
     public ResponseEntity<ProductDTO> addProduct(@PathVariable Long categoryId, @Valid @RequestBody ProductDTO productDTO) {
 
         ProductDTO addedProduct = productService.addProduct(categoryId,productDTO);
@@ -30,7 +30,7 @@ public class ProductController {
     }
 
     @PostMapping("/seller/categories/{categoryId}/product")// finished
-    public ResponseEntity<ProductDTO> addProductSeller(@PathVariable Long categoryId,
+    public ResponseEntity<ProductDTO> addProductForSeller(@PathVariable Long categoryId,
                                                        @Valid @RequestBody ProductDTO productDTO){
 
         ProductDTO savedProductDTO = productService.addProduct(categoryId, productDTO);
@@ -48,6 +48,28 @@ public class ProductController {
 
         ProductResponse productResponse = productService.findAllProducts(pageNumber, pageSize, sortBy, sortOrder,
                                                                          keyword, category);
+        return ResponseEntity.status(HttpStatus.OK).body(productResponse);
+    }
+
+    @GetMapping("/admin/products")//finished
+    public ResponseEntity<ProductResponse> findAllProductsForAdmin(
+            @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(name = "sortBy", defaultValue = AppConstants.SORT_PRODUCTS_BY, required = false) String sortBy,
+            @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR, required = false) String sortOrder){
+
+        ProductResponse productResponse = productService.findAllProductsForAdmin(pageNumber, pageSize, sortBy, sortOrder);
+        return ResponseEntity.status(HttpStatus.OK).body(productResponse);
+    }
+
+    @GetMapping("/seller/products")//finished
+    public ResponseEntity<ProductResponse> findAllProductsForSeller( //not completed yet
+            @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(name = "sortBy", defaultValue = AppConstants.SORT_PRODUCTS_BY, required = false) String sortBy,
+            @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR, required = false) String sortOrder){
+
+        ProductResponse productResponse = productService.findAllProductsForSeller(pageNumber, pageSize, sortBy, sortOrder);
         return ResponseEntity.status(HttpStatus.OK).body(productResponse);
     }
 
@@ -82,11 +104,12 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(updatedProductDTO);
     }
 
-    @DeleteMapping("/admin/products/{productId}")//not completed yet
-    public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long productId){
+    @PutMapping("/seller/products/{productId}") //finished
+    public ResponseEntity<ProductDTO> updateProductForSeller(@Valid @RequestBody ProductDTO productDTO,
+                                                             @PathVariable Long productId){
 
-        ProductDTO deletedProduct = productService.deleteProduct(productId);
-        return ResponseEntity.status(HttpStatus.OK).body(deletedProduct);
+        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedProductDTO);
     }
 
     @PutMapping("/admin/products/{productId}/image") //finished
@@ -97,43 +120,6 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(updatedProduct);
     }
 
-    @GetMapping("/admin/products")//finished
-    public ResponseEntity<ProductResponse> findAllProductsForAdmin(
-            @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
-            @RequestParam(name = "sortBy", defaultValue = AppConstants.SORT_PRODUCTS_BY, required = false) String sortBy,
-            @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR, required = false) String sortOrder){
-
-        ProductResponse productResponse = productService.findAllProductsForAdmin(pageNumber, pageSize, sortBy, sortOrder);
-        return ResponseEntity.status(HttpStatus.OK).body(productResponse);
-    }
-
-    @GetMapping("/seller/products")//finished
-    public ResponseEntity<ProductResponse> findAllProductsForSeller(
-            @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
-            @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
-            @RequestParam(name = "sortBy", defaultValue = AppConstants.SORT_PRODUCTS_BY, required = false) String sortBy,
-            @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR, required = false) String sortOrder){
-
-        ProductResponse productResponse = productService.findAllProductsForSeller(pageNumber, pageSize, sortBy, sortOrder);
-        return ResponseEntity.status(HttpStatus.OK).body(productResponse);
-    }
-
-    @PutMapping("/seller/products/{productId}") //finished
-    public ResponseEntity<ProductDTO> updateProductForSeller(@Valid @RequestBody ProductDTO productDTO,
-                                                             @PathVariable Long productId){
-
-        ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(updatedProductDTO);
-    }
-
-    @DeleteMapping("/seller/products/{productId}")//finished
-    public ResponseEntity<ProductDTO> deleteProductForSeller(@PathVariable Long productId){
-
-        ProductDTO deletedProduct = productService.deleteProduct(productId);
-        return ResponseEntity.status(HttpStatus.OK).body(deletedProduct);
-    }
-
     @PutMapping("/seller/products/{productId}/image")//finished
     public ResponseEntity<ProductDTO> updateProductImageForSeller(@PathVariable Long productId,
                                                                   @RequestParam("image")MultipartFile image) throws IOException {
@@ -142,4 +128,17 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(updatedProduct);
     }
 
+    @DeleteMapping("/admin/products/{productId}")//not completed yet
+    public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long productId){
+
+        ProductDTO deletedProduct = productService.deleteProduct(productId);
+        return ResponseEntity.status(HttpStatus.OK).body(deletedProduct);
+    }
+
+    @DeleteMapping("/seller/products/{productId}")//finished
+    public ResponseEntity<ProductDTO> deleteProductForSeller(@PathVariable Long productId){
+
+        ProductDTO deletedProduct = productService.deleteProduct(productId);
+        return ResponseEntity.status(HttpStatus.OK).body(deletedProduct);
+    }
 }

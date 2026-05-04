@@ -94,7 +94,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Product product = modelMapper.map(productDTO, Product.class);
-        product.setUser(authUtil.loggedInUser());
+        //product.setUser(authUtil.loggedInUser());
         product.setImage("default.png");
         product.setCategory(category);
         if(product.getDiscount() == null) product.setDiscount(0.0);
@@ -137,13 +137,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse findAllProductsForSeller(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-        Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
-
-        User user = authUtil.loggedInUser();
-        Page<Product> productPage = productRepository.findByUser(user, pageDetails);
-        return getProductResponse(productPage,
-                                  this::mapToDtoWithImage,
-                          "NO PRODUCTS HAVE BEEN ADDED YET");
+//        Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
+//
+//        //User user = authUtil.loggedInUser();
+//        Page<Product> productPage = productRepository.findByUser(user, pageDetails);
+//        return getProductResponse(productPage,
+//                                  this::mapToDtoWithImage,
+//                          "NO PRODUCTS HAVE BEEN ADDED YET");
+        return null;
     }
 
     @Override
