@@ -1,5 +1,6 @@
-package com.soft.ecommerce.service;
+package com.soft.ecommerce.service.impl;
 
+import com.soft.ecommerce.service.api.FileService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 

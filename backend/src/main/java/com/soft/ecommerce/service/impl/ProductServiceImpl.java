@@ -1,14 +1,15 @@
-package com.soft.ecommerce.service;
+package com.soft.ecommerce.service.impl;
 
 import com.soft.ecommerce.exception.APIException;
 import com.soft.ecommerce.exception.ResourceNotFoundException;
 import com.soft.ecommerce.model.Category;
 import com.soft.ecommerce.model.Product;
-import com.soft.ecommerce.model.User;
+import com.soft.ecommerce.payload.PageResponse;
 import com.soft.ecommerce.payload.ProductDTO;
-import com.soft.ecommerce.payload.ProductResponse;
 import com.soft.ecommerce.repository.CategoryRepository;
 import com.soft.ecommerce.repository.ProductRepository;
+import com.soft.ecommerce.service.api.FileService;
+import com.soft.ecommerce.service.api.ProductService;
 import com.soft.ecommerce.utils.AuthUtil;
 import com.soft.ecommerce.utils.RefactorMethods;
 import org.modelmapper.ModelMapper;
@@ -20,8 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.Ref;
 import java.util.List;
-import java.util.function.Function;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -31,10 +32,8 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final FileService fileService;
     private final AuthUtil authUtil;
-
     @Value("${image.base.url}")
     private String imageBaseUrl;
-
     @Value("${project.image}")
     private String path;
 
@@ -61,22 +60,6 @@ public class ProductServiceImpl implements ProductService {
         return modelMapper.map(product, ProductDTO.class);
     }
 
-    private ProductResponse getProductResponse(Page<Product> productPage, Function<Product, ProductDTO> mapper,String message) {
-        List<Product> products = productPage.getContent();
-
-        if(products.isEmpty())  throw new APIException(message);
-        List<ProductDTO> productDTOS = products.stream()
-                                               .map(mapper)
-                                               .toList();
-        return ProductResponse.builder()
-                              .totalElements(productPage.getTotalElements())
-                              .pageSize(productPage.getSize())
-                              .pageNumber(productPage.getNumber())
-                              .totalPages(productPage.getTotalPages())
-                              .lastPage(productPage.isLast())
-                              .content(productDTOS)
-                              .build();
-    }
 
     @Override
     public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
@@ -107,7 +90,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse findAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, String keyword, String category) {
+    public PageResponse<ProductDTO> findAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, String keyword, String category) {
         Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
         Specification<Product> spec = (root, cq, cb) -> cb.conjunction();
 
@@ -121,22 +104,22 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Page<Product> productPage =  productRepository.findAll(spec, pageDetails);
-        return getProductResponse(productPage,
-                                  this::mapToDtoWithImage,
-                          "NO PRODUCTS HAVE BEEN ADDED YET");
+        return RefactorMethods.getPageResponse(productPage,
+                                               this::mapToDtoWithImage,
+                                       "NO PRODUCTS HAVE BEEN ADDED YET");
     }
 
     @Override
-    public ProductResponse findAllProductsForAdmin(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+    public PageResponse<ProductDTO> findAllProductsForAdmin(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
         Page<Product> productPage = productRepository.findAll(pageDetails);
-        return getProductResponse(productPage,
-                                  this::mapToDtoWithImage,
-                          "NO PRODUCTS HAVE BEEN ADDED YET");
+        return RefactorMethods.getPageResponse(productPage,
+                                               this::mapToDtoWithImage,
+                                       "NO PRODUCTS HAVE BEEN ADDED YET");
     }
 
     @Override
-    public ProductResponse findAllProductsForSeller(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+    public PageResponse<ProductDTO> findAllProductsForSeller(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
 //        Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
 //
 //        //User user = authUtil.loggedInUser();
@@ -148,7 +131,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse findProductsByCategory(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, Long categoryId) {
+    public PageResponse<ProductDTO> findProductsByCategory(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, Long categoryId) {
         Category category = categoryRepository
                             .findById(categoryId)
                             .orElseThrow( () -> new ResourceNotFoundException("Category", "id", categoryId) );
@@ -156,19 +139,19 @@ public class ProductServiceImpl implements ProductService {
         Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
         Page<Product> productPage = productRepository.findByCategoryOrderByPriceAsc(category, pageDetails);
 
-        return getProductResponse(productPage,
-                                  this::mapToDto,
-                         "Category " + category.getName() + " doesn't have any products yet");
+        return RefactorMethods.getPageResponse(productPage,
+                                               this::mapToDto,
+                                       "Category " + category.getName() + " doesn't have any products yet");
     }
 
     @Override
-    public ProductResponse findProductsByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+    public PageResponse<ProductDTO> findProductsByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
         Page<Product> productPage = productRepository.findByNameContainingIgnoreCase(keyword, pageDetails);
 
-        return getProductResponse(productPage,
-                                  this::mapToDto,
-                          "No products found with keyword: " + keyword);
+        return RefactorMethods.getPageResponse(productPage,
+                                               this::mapToDto,
+                                       "No products found with keyword: " + keyword);
     }
 
     @Override

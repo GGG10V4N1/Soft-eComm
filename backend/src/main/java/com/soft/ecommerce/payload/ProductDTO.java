@@ -1,9 +1,6 @@
 package com.soft.ecommerce.payload;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,7 +29,7 @@ public class ProductDTO {
     private Double specialPrice;
 
     @PositiveOrZero
-    @Max(100)
+    @DecimalMax("100.0")
     private Double discount;
 
 
