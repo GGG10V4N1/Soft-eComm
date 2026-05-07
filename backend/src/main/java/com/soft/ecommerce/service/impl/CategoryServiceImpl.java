@@ -13,8 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
@@ -29,7 +27,6 @@ public class CategoryServiceImpl implements CategoryService {
     private CategoryDTO mapToDto(Category category) {
         return modelMapper.map(category, CategoryDTO.class);
     }
-
 
     @Override
     public CategoryDTO addCategory(CategoryDTO categoryDTO) {
