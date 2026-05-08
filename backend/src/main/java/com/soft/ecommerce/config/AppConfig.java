@@ -6,7 +6,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -20,13 +23,13 @@ public class AppConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable()) // 🔥 obligatorio para APIs REST
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().authenticated() // 🔐 TODO requiere login
-                )
-                .httpBasic(Customizer.withDefaults()); // Basic Auth
-
+        http.authorizeHttpRequests((request) ->
+                                    request.requestMatchers("/h2-console/**").permitAll()
+                                    .anyRequest().authenticated());
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.httpBasic(withDefaults());
+        http.headers(headers ->headers.frameOptions(frameOptionsConfig -> frameOptionsConfig.sameOrigin()));
+        http.csrf(csrf -> csrf.disable());
         return http.build();
     }
 
