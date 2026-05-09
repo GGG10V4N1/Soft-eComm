@@ -29,7 +29,7 @@ public class JwtUtils {
     @Value("${spring.app.jwtSecret}")
     private String jwtSecret;
     @Value("${spring.app.jwtExpirationMs}")
-    private int jwtExpirationMs;
+    private Integer jwtExpirationMs;
     @Value("${spring.ecom.app.jwtCookieName}")
     private String jwtCookie;
 
@@ -87,7 +87,10 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parser().verifyWith((SecretKey) key()).build().parseSignedClaims(authToken);
+            Jwts.parser()
+                .verifyWith((SecretKey) key())
+                .build()
+                .parseSignedClaims(authToken);
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());

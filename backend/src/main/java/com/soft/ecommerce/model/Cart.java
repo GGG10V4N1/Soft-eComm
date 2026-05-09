@@ -1,9 +1,10 @@
 package com.soft.ecommerce.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "cart")
@@ -12,7 +13,18 @@ import lombok.*;
 @AllArgsConstructor
 public class Cart {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    //TODO [Reverse Engineering] generate columns from DB
+    @Column(name = "total_price")
+    private Double totalAmount = 0.0;
+
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @OneToMany(mappedBy = "cart", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true)
+    private List<CartItem> cartItems = new ArrayList<>();
+
+
 }
