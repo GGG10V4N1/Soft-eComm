@@ -2,6 +2,8 @@ package com.soft.ecommerce.security.services;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.soft.ecommerce.model.User;
+import lombok.Data;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,8 +16,12 @@ import java.util.stream.Collectors;
 public class UserDetailsImpl implements UserDetails {
 
     private static final long serialVersionUID = 1L;
+
+    @Getter
     private final Long id;
     private final String username;
+
+    @Getter
     private final String email;
     @JsonIgnore
     private String password;

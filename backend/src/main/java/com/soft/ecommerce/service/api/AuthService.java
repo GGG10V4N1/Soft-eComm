@@ -7,8 +7,6 @@ import com.soft.ecommerce.security.request.LoginRequest;
 import com.soft.ecommerce.security.request.SignUpRequest;
 import com.soft.ecommerce.security.response.MessageResponse;
 import com.soft.ecommerce.security.response.UserInfoResponse;
-import jakarta.validation.Valid;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,5 +16,5 @@ public interface AuthService {
     ResponseCookie logoutUser();
     ResponseEntity<MessageResponse> register(SignUpRequest signUpRequest);
     UserInfoResponse getCurrentUserDetails(Authentication authentication);
-    PageResponse<UserDTO> getAllSellers(Pageable pageDetails);
+    PageResponse<UserDTO> getAllSellers(Integer pageNumber);
 }

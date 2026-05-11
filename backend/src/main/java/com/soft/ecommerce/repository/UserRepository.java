@@ -2,6 +2,7 @@ package com.soft.ecommerce.repository;
 
 import com.soft.ecommerce.model.AppRole;
 import com.soft.ecommerce.model.User;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,4 +19,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :role")
     Page<User> findByRoleName(@Param("role") AppRole role, Pageable pageable);
+
 }
