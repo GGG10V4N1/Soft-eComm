@@ -20,17 +20,17 @@ public class AppConfig {
         return new ModelMapper();
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-        http.authorizeHttpRequests((request) ->
-                                    request.requestMatchers("/h2-console/**").permitAll()
-                                    .anyRequest().authenticated());
-        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        http.httpBasic(withDefaults());
-        http.headers(headers ->headers.frameOptions(frameOptionsConfig -> frameOptionsConfig.sameOrigin()));
-        http.csrf(csrf -> csrf.disable());
-        return http.build();
-    }
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//
+//        http.authorizeHttpRequests((request) ->
+//                                    request.requestMatchers("/h2-console/**").permitAll()
+//                                    .anyRequest().authenticated());
+//        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+//        http.httpBasic(withDefaults());
+//        http.headers(headers ->headers.frameOptions(frameOptionsConfig -> frameOptionsConfig.sameOrigin()));
+//        http.csrf(csrf -> csrf.disable());
+//        return http.build();
+//    }
 
 }

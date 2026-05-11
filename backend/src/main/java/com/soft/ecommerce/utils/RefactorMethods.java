@@ -22,10 +22,10 @@ public final class RefactorMethods {
         return PageRequest.of(pageNumber, pageSize, sortByAndOrder);
     }
 
-    public static <E, D> PageResponse<D> getPageResponse(Page<E> page, Function<E, D> mapper,String message) {
+    public static <E, D> PageResponse<D> getPageResponse(Page<E> page, Function<E, D> mapper,String ifEmptyMessage) {
         List<E> content = page.getContent();
 
-        if(content.isEmpty()) throw new APIException(message);
+        if(content.isEmpty()) throw new APIException(ifEmptyMessage);
         List<D> dtos = content.stream()
                               .map(mapper)
                               .toList();

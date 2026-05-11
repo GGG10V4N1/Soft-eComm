@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.Set;
 
 @Data
-public class SingUpRequest {
+public class SignUpRequest {
     @NotBlank
     private String username;
 

@@ -14,9 +14,9 @@ public interface ProductService {
                                            String sortOrder,Long categoryId);
     PageResponse<ProductDTO> findProductsByKeyword(String keyword, Integer pageNumber, Integer pageSize,
                                           String sortBy, String sortOrder);
-    ProductDTO updateProduct(Long productId, ProductDTO productDTO);
-    ProductDTO deleteProduct(Long productId);
-    ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException;
     PageResponse<ProductDTO> findAllProductsForAdmin(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
     PageResponse<ProductDTO> findAllProductsForSeller(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
+    ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException;
+    ProductDTO updateProduct(Long productId, ProductDTO productDTO);
+    ProductDTO deleteProduct(Long productId);
 }
