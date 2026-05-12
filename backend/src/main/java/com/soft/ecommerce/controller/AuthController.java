@@ -28,7 +28,7 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
 
         AuthenticationResult result = authService.login(loginRequest);
         return ResponseEntity.status(HttpStatus.OK)
@@ -37,7 +37,7 @@ public class AuthController {
     }
 
     @PostMapping("/signout")
-    public ResponseEntity<?> signOutUser(){
+    public ResponseEntity<?> logoutUser(){
 
         ResponseCookie cookie = authService.logoutUser();
         return ResponseEntity.status(HttpStatus.OK)
@@ -46,13 +46,12 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
-        return ResponseEntity.status(HttpStatus.CONTINUE).body(authService.register(signUpRequest));
+    public ResponseEntity<?> signupUser(@Valid @RequestBody SignUpRequest signUpRequest) {
+        return authService.register(signUpRequest);
     }
 
     @GetMapping("/username")
-    public String currentUserName(Authentication authentication){
-
+    public String currentUsername(Authentication authentication){
         if (authentication != null) return authentication.getName();
         return "";
     }
@@ -67,7 +66,8 @@ public class AuthController {
 
 
     @GetMapping("/sellers")
-    public ResponseEntity<?> getAllSellers(@RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER,
+    public ResponseEntity<?> getAllSellers(@RequestParam(name = "pageNumber",
+                                                         defaultValue = AppConstants.PAGE_NUMBER,
                                                          required = false) Integer pageNumber) {
 
         PageResponse<UserDTO> userResponse = authService.getAllSellers(pageNumber);

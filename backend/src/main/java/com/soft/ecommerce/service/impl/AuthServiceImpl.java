@@ -1,6 +1,7 @@
 package com.soft.ecommerce.service.impl;
 
 import com.soft.ecommerce.config.AppConstants;
+import com.soft.ecommerce.exception.APIException;
 import com.soft.ecommerce.model.AppRole;
 import com.soft.ecommerce.model.Role;
 import com.soft.ecommerce.model.User;
@@ -18,7 +19,6 @@ import com.soft.ecommerce.security.services.UserDetailsImpl;
 import com.soft.ecommerce.service.api.AuthService;
 import com.soft.ecommerce.utils.RefactorMethods;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -57,7 +57,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthenticationResult login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate( new UsernamePasswordAuthenticationToken(
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                                                                             loginRequest.getUsername(),
                                                                             loginRequest.getPassword()) );
 
@@ -88,12 +88,14 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseEntity<MessageResponse> register(SignUpRequest signUpRequest) {
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Error: Username is already taken!"));
+        if (userRepository.existsByUsernameIgnoreCase(signUpRequest.getUsername())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Error: Username" +
+                                                                      signUpRequest.getUsername() + "is already taken!"));
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Error: Email is already in use!"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("Error: Email " +
+                                                                      signUpRequest.getEmail() + "is already in use!"));
         }
         //new user
         User user = User.builder()
@@ -108,7 +110,7 @@ public class AuthServiceImpl implements AuthService {
         if (strRoles == null) {
             Role userRole = roleRepository.findByName(AppRole.ROLE_USER)
                                           .orElseThrow(
-                                               () -> new RuntimeException("Error: Role is not found.")
+                                               () -> new APIException("Error: Role is not found.")
                                           );
             roles.add(userRole);
         } else {
@@ -116,17 +118,17 @@ public class AuthServiceImpl implements AuthService {
                 switch (role) {
                     case "admin":
                         Role adminRole = roleRepository.findByName(AppRole.ROLE_ADMIN)
-                                                       .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                                       .orElseThrow(() -> new APIException("Error: Role is not found."));
                         roles.add(adminRole);
                         break;
                     case "seller":
                         Role sellerRole = roleRepository.findByName(AppRole.ROLE_SELLER)
-                                                        .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                                        .orElseThrow(() -> new APIException("Error: Role is not found."));
                         roles.add(sellerRole);
                         break;
                     default:
                         Role userRole = roleRepository.findByName(AppRole.ROLE_USER)
-                                                      .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                                      .orElseThrow(() -> new APIException("Error: Role is not found."));
                         roles.add(userRole);
                 }
             });
@@ -141,9 +143,10 @@ public class AuthServiceImpl implements AuthService {
     public UserInfoResponse getCurrentUserDetails(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .toList();
+        List<String> roles = userDetails.getAuthorities()
+                                        .stream()
+                                        .map(item -> item.getAuthority())
+                                        .toList();
 
         return UserInfoResponse.builder()
                                .id(userDetails.getId())
