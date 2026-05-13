@@ -75,7 +75,6 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                                 .requestMatchers("/h2-console/**").permitAll()
                                 .requestMatchers("/ecomApi/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/ecomApi/seller/**").hasAnyRole("ADMIN","SELLER")
-                                .requestMatchers("/ecomApi/admin/**").permitAll()
                                 .requestMatchers("/ecomApi/public/**").permitAll()
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/ecomApi/test/**").permitAll()

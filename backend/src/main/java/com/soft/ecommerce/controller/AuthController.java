@@ -18,7 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("ecomApi/auth")
+@RequestMapping("/ecomApi/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -51,9 +51,9 @@ public class AuthController {
     }
 
     @GetMapping("/username")
-    public String currentUsername(Authentication authentication){
-        if (authentication != null) return authentication.getName();
-        return "";
+    public ResponseEntity<String> currentUsername(Authentication authentication){
+        if (authentication != null) return ResponseEntity.status(HttpStatus.OK).body(authentication.getName());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("NOT FOUND USER");
     }
 
 
