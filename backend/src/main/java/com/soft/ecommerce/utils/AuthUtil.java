@@ -10,7 +10,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuthUtil {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public AuthUtil(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public String loggedInEmail(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -20,7 +20,7 @@ public class CartController {
     }
 
     @PostMapping("/carts/products/{productId}/quantity/{quantity}")
-    public ResponseEntity<CartDTO> addProductToCart(@PathVariable Long productId, @PathVariable Integer quantity) {
+    public ResponseEntity<CartDTO> addProductToCart(@PathVariable Long productId, @PathVariable Integer quantity)  {
 
         CartDTO cartDTO = cartService.addProductToCart(productId, quantity);
         return ResponseEntity.status(HttpStatus.CREATED).body(cartDTO);
@@ -37,7 +37,7 @@ public class CartController {
     public ResponseEntity<List<CartDTO>> findAllCarts() {
 
         List<CartDTO> cartDTOs = cartService.findAllCarts();
-        return ResponseEntity.status(HttpStatus.FOUND).body(cartDTOs);
+        return ResponseEntity.status(HttpStatus.OK).body(cartDTOs);
     }
 
     @GetMapping("/carts/users/cart")

@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.sql.Ref;
 import java.util.List;
 
 @Service
@@ -164,7 +163,7 @@ public class ProductServiceImpl implements ProductService {
 
         foundedProduct.setName(prodChanges.getName());
         foundedProduct.setDescription(prodChanges.getDescription());
-        foundedProduct.setStock(prodChanges.getStock());
+        foundedProduct.setQuantity(prodChanges.getQuantity());
         foundedProduct.setPrice(prodChanges.getPrice());
         foundedProduct.setDiscount(prodChanges.getDiscount());
         foundedProduct.setSpecialPrice(prodChanges.getSpecialPrice());

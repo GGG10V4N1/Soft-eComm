@@ -19,7 +19,7 @@ public class ProductDTO {
 
     @NotNull
     @PositiveOrZero
-    private Integer stock;
+    private Integer quantity;
 
     @NotNull
     @PositiveOrZero
