@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,6 +45,7 @@ public class CartServiceImpl implements CartService {
         Cart cart = Cart.builder()
                         .totalAmount(0.00)
                         .user(authUtil.loggedInUser())
+                        .cartItems(new ArrayList<>())
                         .build();
         return cartRepository.save(cart);
     }
@@ -133,9 +135,9 @@ public class CartServiceImpl implements CartService {
         if(newQuantity > product.getQuantity())
             throw new APIException("Only " + product.getQuantity() + " items of " + product.getName() + " are available");
 
-
         if(newQuantity == 0){
-            deleteProductFromCart(cartId, productId);
+            cart.setTotalAmount(cart.getTotalAmount() + (product.getSpecialPrice() * quantity));
+            cart.removeCartItem(cartItem);
         }else{
             cartItem.setPrice(product.getSpecialPrice());
             cartItem.setQuantity(newQuantity);
@@ -144,9 +146,6 @@ public class CartServiceImpl implements CartService {
             cartRepository.save(cart);
         }
 
-        CartItem updatedCartItem = cartItemRepository.save(cartItem);
-        if(updatedCartItem.getQuantity() == 0)
-            cartItemRepository.deleteById(updatedCartItem.getId());
         return cartToCartDTO(cart);
     }
 

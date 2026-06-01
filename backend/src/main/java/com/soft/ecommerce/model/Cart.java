@@ -32,4 +32,9 @@ public class Cart {
         cartItem.setCart(this);
     }
 
+    public void removeCartItem(CartItem cartItem) {
+        cartItems.remove(cartItem);
+        cartItem.setCart(null);
+    }
+
 }
