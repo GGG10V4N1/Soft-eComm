@@ -13,6 +13,7 @@ import com.soft.ecommerce.repository.CartRepository;
 import com.soft.ecommerce.repository.ProductRepository;
 import com.soft.ecommerce.service.api.CartService;
 import com.soft.ecommerce.utils.AuthUtil;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -47,9 +48,9 @@ public class CartServiceImpl implements CartService {
         return cartRepository.save(cart);
     }
 
-    private CartDTO cartToCartDTO(Cart savedCart) {
-        CartDTO cartDTO = modelMapper.map(savedCart, CartDTO.class);
-        List<CartItem> cartItems = savedCart.getCartItems();
+    private CartDTO cartToCartDTO(Cart cart) {
+        CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+        List<CartItem> cartItems = cart.getCartItems();
         List<ProductDTO> cartProducts = cartItems.stream()
                                                  .map( item -> {
                                                     ProductDTO prodDTO = modelMapper.map(item.getProduct(), ProductDTO.class);
@@ -84,7 +85,7 @@ public class CartServiceImpl implements CartService {
                                        .product(product)
                                        .quantity(quantity)
                                        .discount(product.getDiscount())
-                                       .price(product.getPrice())
+                                       .price(product.getSpecialPrice())
                                        .build();
 
         cart.setTotalAmount( cart.getTotalAmount() + (product.getPrice() * quantity) );
@@ -100,20 +101,67 @@ public class CartServiceImpl implements CartService {
         if(carts.isEmpty())
             throw new APIException("No carts exist");
 
-        List<CartDTO> cartDTOS = carts.stream()
-                                      .map(this::cartToCartDTO)
-                                      .toList();
-        return cartDTOS;
+        return carts.stream()
+                    .map(this::cartToCartDTO)
+                    .toList();
     }
 
     @Override
+    @Transactional
     public CartDTO updateProductQuantityInCart(Long productId, Integer quantity) {
-        return null;
+        String emailId = authUtil.loggedInEmail();
+        Cart userCart = cartRepository.findByEmail(emailId)
+                                      .orElseThrow(() -> new ResourceNotFoundException("Cart", "email", emailId));
+        Long cartId  = userCart.getId();
+
+        Cart cart = cartRepository.findById(cartId)
+                                  .orElseThrow(() -> new ResourceNotFoundException("Cart", "id", cartId));
+
+        Product product = productRepository.findById(productId)
+                                           .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+        if(product.getQuantity() == 0)
+            throw new APIException(product.getName() +  " is not available");
+        if(product.getQuantity() < quantity)
+            throw new APIException("Only " + product.getQuantity() + " items of " + product.getName() + " are available");
+
+        CartItem cartItem = cartItemRepository.findByProductIdAndCartId(productId, cartId)
+                                              .orElseThrow(() -> new APIException("Product " + product.getName() +
+                                                                                   " not available in the cart!!!"));
+        int newQuantity = cartItem.getQuantity() + quantity;
+        if(newQuantity < 0)
+            throw new APIException("Quantity cannot be negative");
+        if(newQuantity > product.getQuantity())
+            throw new APIException("Only " + product.getQuantity() + " items of " + product.getName() + " are available");
+
+
+        if(newQuantity == 0){
+            deleteProductFromCart(cartId, productId);
+        }else{
+            cartItem.setPrice(product.getSpecialPrice());
+            cartItem.setQuantity(newQuantity);
+            cartItem.setDiscount(product.getDiscount());
+            cart.setTotalAmount(cart.getTotalAmount() + (product.getSpecialPrice() * quantity));
+            cartRepository.save(cart);
+        }
+
+        CartItem updatedCartItem = cartItemRepository.save(cartItem);
+        if(updatedCartItem.getQuantity() == 0)
+            cartItemRepository.deleteById(updatedCartItem.getId());
+        return cartToCartDTO(cart);
     }
 
+    @Transactional
     @Override
     public String deleteProductFromCart(Long cartId, Long productId) {
-        return "";
+        Cart cart = cartRepository.findById(cartId)
+                                  .orElseThrow(() -> new ResourceNotFoundException("Cart", "id", cartId));
+
+        CartItem cartItem = cartItemRepository.findByProductIdAndCartId(productId, cartId)
+                                              .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+
+        cart.setTotalAmount(cart.getTotalAmount() - (cartItem.getPrice()*cartItem.getQuantity()));
+        cartItemRepository.deleteByProductIdAndCartId(productId, cartId);
+        return "Product " + cartItem.getProduct().getName() + "removed from the cart";
     }
 
     @Override
@@ -124,11 +172,12 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartDTO findCartById() {
         String emailId = authUtil.loggedInEmail();
-        Cart cart = cartRepository.findByEmail(emailId)
-                                  .orElseThrow( () -> new ResourceNotFoundException("Cart", "email", emailId) );
+        Cart cartUser = cartRepository.findByEmail(emailId)
+                                      .orElseThrow(() -> new ResourceNotFoundException("Cart", "email", emailId));
+        Long cartId = cartUser.getId();
 
-        Long cartId = cart.getId();
-
-        return null;
+        Cart foundedCart = cartRepository.findByEmailAndCartId(emailId, cartId)
+                                         .orElseThrow(() -> new ResourceNotFoundException("Cart", "id", cartId));
+        return cartToCartDTO(foundedCart);
     }
 }
