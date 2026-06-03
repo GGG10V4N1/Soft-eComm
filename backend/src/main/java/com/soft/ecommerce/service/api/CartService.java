@@ -13,7 +13,5 @@ public interface CartService {
     List<CartDTO> findAllCarts();
     CartDTO findCartById();
     String deleteProductFromCart(Long cartId, Long productId);
-
-    @Transactional
     CartDTO updateProductQuantityInCart(Long productId, Integer quantity);
 }

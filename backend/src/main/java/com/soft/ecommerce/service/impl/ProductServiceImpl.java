@@ -71,9 +71,9 @@ public class ProductServiceImpl implements ProductService {
         boolean isProductPresent = products.stream()
                                            .anyMatch(p -> p.getName().equalsIgnoreCase(productDTO.getName()) );
 
-        if(isProductPresent) {
+        if(isProductPresent)
             throw new APIException("Product with name " + productDTO.getName() + " already exists in category " + category.getName());
-        }
+
 
         Product product = modelMapper.map(productDTO, Product.class);
         //product.setUser(authUtil.loggedInUser());

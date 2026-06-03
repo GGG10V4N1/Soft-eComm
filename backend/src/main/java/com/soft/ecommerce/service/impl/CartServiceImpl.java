@@ -159,13 +159,54 @@ public class CartServiceImpl implements CartService {
                                               .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
         cart.setTotalAmount(cart.getTotalAmount() - (cartItem.getPrice()*cartItem.getQuantity()));
-        cartItemRepository.deleteByProductIdAndCartId(productId, cartId);
+        cart.removeCartItem(cartItem);
         return "Product " + cartItem.getProduct().getName() + "removed from the cart";
     }
 
+    @Transactional
     @Override
-    public String createOrUpdateCartWithItems(List<CartItemDTO> cartItems) {
-        return "";
+    public String createOrUpdateCartWithItems(List<CartItemDTO> cartItemsDTO) {
+
+        String email =  authUtil.loggedInEmail();
+
+        //Getting the cart that exists or get a new one
+        Cart cart = cartRepository.findByEmail(email)
+                                  .orElseGet(() -> {
+                                     Cart newCart = Cart.builder()
+                                                        .totalAmount(0.00)
+                                                        .user(authUtil.loggedInUser())
+                                                        .cartItems(new ArrayList<>())
+                                                        .build();
+                                     return cartRepository.save(newCart);
+                                  });
+
+        if(!cart.getCartItems().isEmpty())
+            cartItemRepository.deleteAllByCartId(cart.getId());
+
+        Double totalAmount = 0.00;
+
+        for(CartItemDTO cartItemDTO : cartItemsDTO) {
+            Long productId = cartItemDTO.getProductId();
+            Integer quantity = cartItemDTO.getQuantity();
+
+            Product product = productRepository.findById(productId)
+                                               .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+
+            totalAmount += product.getSpecialPrice()*quantity;
+
+            CartItem cartItem = CartItem.builder()
+                                        .cart(cart)
+                                        .product(product)
+                                        .quantity(quantity)
+                                        .discount(product.getDiscount())
+                                        .price(product.getSpecialPrice())
+                                        .build();
+            cart.addCartItem(cartItem);
+        }
+
+        cart.setTotalAmount(totalAmount);
+        cartRepository.save(cart);
+        return "Cart created/updated with new items successfully";
     }
 
     @Override

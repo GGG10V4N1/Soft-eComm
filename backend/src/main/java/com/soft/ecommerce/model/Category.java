@@ -21,4 +21,14 @@ public class Category {
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<Product> products;
+
+    public void addProduct(Product product) {
+        products.add(product);
+        product.setCategory(this);
+    }
+
+    public void removeProduct(Product product) {
+        products.remove(product);
+        product.setCategory(null);
+    }
 }
