@@ -46,7 +46,7 @@ public class ProductServiceImpl implements ProductService {
     private String path;
 
     public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository,
-                              ModelMapper modelMapper, CartService cartServiceImpl, CartRepository cartRepository, FileService fileService, AuthUtil authUtil) {
+                              ModelMapper modelMapper, CartServiceImpl cartServiceImpl, CartRepository cartRepository, FileService fileService, AuthUtil authUtil) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.modelMapper = modelMapper;
