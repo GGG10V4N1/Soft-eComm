@@ -2,12 +2,17 @@ package com.soft.ecommerce.service.impl;
 
 import com.soft.ecommerce.exception.APIException;
 import com.soft.ecommerce.exception.ResourceNotFoundException;
+import com.soft.ecommerce.model.Cart;
 import com.soft.ecommerce.model.Category;
 import com.soft.ecommerce.model.Product;
+import com.soft.ecommerce.model.User;
+import com.soft.ecommerce.payload.CartDTO;
 import com.soft.ecommerce.payload.PageResponse;
 import com.soft.ecommerce.payload.ProductDTO;
+import com.soft.ecommerce.repository.CartRepository;
 import com.soft.ecommerce.repository.CategoryRepository;
 import com.soft.ecommerce.repository.ProductRepository;
+import com.soft.ecommerce.service.api.CartService;
 import com.soft.ecommerce.service.api.FileService;
 import com.soft.ecommerce.service.api.ProductService;
 import com.soft.ecommerce.utils.AuthUtil;
@@ -29,18 +34,24 @@ public class ProductServiceImpl implements ProductService {
     private final ModelMapper modelMapper;
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final CartServiceImpl cartServiceImpl;
+    private final CartRepository cartRepository;
     private final FileService fileService;
     private final AuthUtil authUtil;
+
     @Value("${image.base.url}")
     private String imageBaseUrl;
+
     @Value("${project.image}")
     private String path;
 
     public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository,
-                              ModelMapper modelMapper, FileService fileService, AuthUtil authUtil) {
+                              ModelMapper modelMapper, CartService cartServiceImpl, CartRepository cartRepository, FileService fileService, AuthUtil authUtil) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.modelMapper = modelMapper;
+        this.cartServiceImpl = cartServiceImpl;
+        this.cartRepository = cartRepository;
         this.fileService = fileService;
         this.authUtil = authUtil;
     }
@@ -62,21 +73,16 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
-        Category category = categoryRepository
-                            .findById(categoryId)
-                            .orElseThrow( () -> new ResourceNotFoundException("Category", "id", categoryId) );
+        Category category = categoryRepository.findById(categoryId)
+                                              .orElseThrow( () -> new ResourceNotFoundException("Category", "id", categoryId) );
 
-        List<Product> products = category.getProducts();
-
-        boolean isProductPresent = products.stream()
-                                           .anyMatch(p -> p.getName().equalsIgnoreCase(productDTO.getName()) );
-
+        boolean isProductPresent = category.getProducts().stream()
+                                                         .anyMatch(p -> p.getName().equalsIgnoreCase(productDTO.getName()) );
         if(isProductPresent)
             throw new APIException("Product with name " + productDTO.getName() + " already exists in category " + category.getName());
 
-
         Product product = modelMapper.map(productDTO, Product.class);
-        //product.setUser(authUtil.loggedInUser());
+        product.setUser(authUtil.loggedInUser());
         product.setImage("default.png");
         product.setCategory(category);
         if(product.getDiscount() == null) product.setDiscount(0.0);
@@ -119,28 +125,26 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public PageResponse<ProductDTO> findAllProductsForSeller(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-//        Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
-//
-//        //User user = authUtil.loggedInUser();
-//        Page<Product> productPage = productRepository.findByUser(user, pageDetails);
-//        return getProductResponse(productPage,
-//                                  this::mapToDtoWithImage,
-//                          "NO PRODUCTS HAVE BEEN ADDED YET");
-        return null;
+        Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
+
+        User user = authUtil.loggedInUser();
+        Page<Product> productPage = productRepository.findByUser(user, pageDetails);
+        return RefactorMethods.getPageResponse(productPage,
+                                               this::mapToDtoWithImage,
+                                  "NO PRODUCTS HAVE BEEN ADDED YET");
     }
 
     @Override
     public PageResponse<ProductDTO> findProductsByCategory(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, Long categoryId) {
-        Category category = categoryRepository
-                            .findById(categoryId)
-                            .orElseThrow( () -> new ResourceNotFoundException("Category", "id", categoryId) );
+        Category category = categoryRepository.findById(categoryId)
+                                              .orElseThrow( () -> new ResourceNotFoundException("Category", "id", categoryId) );
 
         Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
         Page<Product> productPage = productRepository.findByCategoryOrderByPriceAsc(category, pageDetails);
 
         return RefactorMethods.getPageResponse(productPage,
                                                this::mapToDto,
-                                       "Category " + category.getName() + " doesn't have any products yet");
+                                  "Category " + category.getName() + " doesn't have any products yet");
     }
 
     @Override
@@ -150,14 +154,13 @@ public class ProductServiceImpl implements ProductService {
 
         return RefactorMethods.getPageResponse(productPage,
                                                this::mapToDto,
-                                       "No products found with keyword: " + keyword);
+                                  "No products found with keyword: " + keyword);
     }
 
     @Override
     public ProductDTO updateProduct(Long productId, ProductDTO productDTO) {
-        Product foundedProduct = productRepository
-                                 .findById(productId)
-                                 .orElseThrow( () -> new ResourceNotFoundException("Product", "id", productId) );
+        Product foundedProduct = productRepository.findById(productId)
+                                                  .orElseThrow( () -> new ResourceNotFoundException("Product", "id", productId) );
 
         Product prodChanges = modelMapper.map(productDTO, Product.class);
 
@@ -169,7 +172,14 @@ public class ProductServiceImpl implements ProductService {
         foundedProduct.setSpecialPrice(prodChanges.getSpecialPrice());
 
         Product updatedProduct = productRepository.save(foundedProduct);
-        //carts
+
+        List<Cart> carts = cartRepository.findAllByProductId(productId);
+
+        List<CartDTO> cartDTOs = carts.stream()
+                                      .map(c-> cartServiceImpl.cartToCartDTO(c))
+                                      .toList();
+
+        cartDTOs.forEach(cartDTO -> cartServiceImpl.updateProductInCarts(cartDTO.getId(), productId));
 
         return mapToDto(updatedProduct);
     }
@@ -191,6 +201,8 @@ public class ProductServiceImpl implements ProductService {
                                  .findById(productId)
                                  .orElseThrow( () -> new ResourceNotFoundException("Product", "id", productId) );
         //carts
+        List<Cart> carts = cartRepository.findAllByProductId(productId);
+        carts.forEach(cart -> cartServiceImpl.deleteProductFromCart(cart.getId(), productId));
 
         productRepository.delete(foundedProduct);
         return mapToDto(foundedProduct);

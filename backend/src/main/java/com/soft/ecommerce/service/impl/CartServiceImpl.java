@@ -50,7 +50,7 @@ public class CartServiceImpl implements CartService {
         return cartRepository.save(cart);
     }
 
-    private CartDTO cartToCartDTO(Cart cart) {
+    protected CartDTO cartToCartDTO(Cart cart) {
         CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
         List<CartItem> cartItems = cart.getCartItems();
         List<ProductDTO> cartProducts = cartItems.stream()
@@ -147,6 +147,27 @@ public class CartServiceImpl implements CartService {
         }
 
         return cartToCartDTO(cart);
+    }
+
+    @Transactional
+    @Override
+    public void updateProductInCarts(Long cartId, Long productId) {
+        Cart cart = cartRepository.findById(cartId)
+                                  .orElseThrow(() -> new ResourceNotFoundException("Cart", "id", cartId));
+        Product product = productRepository.findById(productId)
+                                           .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+
+        CartItem cartItem = cartItemRepository.findByProductIdAndCartId(productId, cartId)
+                                              .orElseThrow(() -> new APIException("Product " + product.getName() +
+                                                                                  " not available in the cart!!!"));
+        Double cartPrice = cart.getTotalAmount() - (cartItem.getPrice() * cartItem.getQuantity());
+
+        cartItem.setPrice(product.getSpecialPrice());
+
+        cart.setTotalAmount(cartPrice + (cartItem.getPrice() * cartItem.getQuantity()));
+
+        cartItemRepository.save(cartItem);
+
     }
 
     @Transactional

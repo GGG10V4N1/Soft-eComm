@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
-//not finished
+// finished
 @RestController
 @RequestMapping("/ecomApi")
 public class ProductController {
@@ -23,7 +23,7 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PostMapping("/admin/categories/{categoryId}/product")// without user
+    @PostMapping("/admin/categories/{categoryId}/product")
     public ResponseEntity<ProductDTO> addProduct(@PathVariable Long categoryId, @Valid @RequestBody ProductDTO productDTO) {
 
         ProductDTO addedProduct = productService.addProduct(categoryId,productDTO);
@@ -98,7 +98,7 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(productResponse);
     }
 
-    @PutMapping("/admin/products/{productId}")//not completed yet
+    @PutMapping("/admin/products/{productId}")//finished
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long productId, @Valid @RequestBody ProductDTO productDTO){
 
         ProductDTO updatedProductDTO = productService.updateProduct(productId, productDTO);
@@ -129,7 +129,7 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(updatedProduct);
     }
 
-    @DeleteMapping("/admin/products/{productId}")//not completed yet
+    @DeleteMapping("/admin/products/{productId}")// finished
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long productId){
 
         ProductDTO deletedProduct = productService.deleteProduct(productId);
