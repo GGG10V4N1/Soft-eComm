@@ -12,14 +12,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Product {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
     private String description;
+
+    @Column(name = "stock")
     private Integer quantity;
+
     private Double price;
     private Double discount;
+
+    @Column(name = "special_price")
     private Double specialPrice;
     private String image;
 

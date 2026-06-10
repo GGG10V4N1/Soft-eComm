@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Email
@@ -39,7 +39,7 @@ public class Order {
     private Payment payment;
 
     @ManyToOne
-    @JoinColumn(name = "address_id")
+    @JoinColumn(name = "addresses_id")
     private Address address;
 
 }
