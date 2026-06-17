@@ -11,40 +11,40 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/ecomApi")
-public class AddressController {
+public class AddressController { //finished
 
-    AddressService addressService;
+    private final AddressService addressService;
 
-    private AddressController(AddressService addressService) {
+    public AddressController(AddressService addressService) {
         this.addressService = addressService;
     }
 
     @PostMapping("/addresses")
-    public ResponseEntity<AddressDTO> createAddress(@Valid @RequestBody AddressDTO addressDTO){
+    public ResponseEntity<AddressDTO> addAddress(@Valid @RequestBody AddressDTO addressDTO){
 
-        AddressDTO savedAddressDTO = addressService.createAddress(addressDTO);
+        AddressDTO savedAddressDTO = addressService.addAddress(addressDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedAddressDTO);
     }
 
     @GetMapping("/addresses")
-    public ResponseEntity<List<AddressDTO>> getAddresses(){
+    public ResponseEntity<List<AddressDTO>> findAllAddresses(){
 
-        List<AddressDTO> addressList = addressService.getAddresses();
+        List<AddressDTO> addressList = addressService.findAllAddresses();
         return ResponseEntity.status(HttpStatus.OK).body(addressList);
     }
 
     @GetMapping("/addresses/{addressId}")
-    public ResponseEntity<AddressDTO> getAddressById(@PathVariable Long addressId){
+    public ResponseEntity<AddressDTO> findAddressByAddressId(@PathVariable Long addressId){
 
-        AddressDTO addressDTO = addressService.getAddressesById(addressId);
+        AddressDTO addressDTO = addressService.findAddressByAdressId(addressId);
         return ResponseEntity.status(HttpStatus.OK).body(addressDTO);
     }
 
 
     @GetMapping("/users/addresses")
-    public ResponseEntity<List<AddressDTO>> getUserAddresses(){
+    public ResponseEntity<List<AddressDTO>> findAllUserAddresses(){
 
-        List<AddressDTO> addressList = addressService.getUserAddresses();
+        List<AddressDTO> addressList = addressService.findAllUserAddresses();
         return ResponseEntity.status(HttpStatus.OK).body(addressList);
     }
 
@@ -57,7 +57,7 @@ public class AddressController {
     }
 
     @DeleteMapping("/addresses/{addressId}")
-    public ResponseEntity<String> updateAddress(@PathVariable Long addressId){
+    public ResponseEntity<String> deleteAddress(@PathVariable Long addressId){
 
         String status = addressService.deleteAddress(addressId);
         return ResponseEntity.status(HttpStatus.OK).body(status);
