@@ -70,11 +70,12 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
-                            auth.requestMatchers("/ecomApi/auth/**").permitAll()
-                                .requestMatchers("/v1/ecomApi-docs/**").permitAll()
+                        auth.requestMatchers("/ecomApi/auth/**").permitAll()
+                                .requestMatchers("/v3/api-docs/**").permitAll()
                                 .requestMatchers("/h2-console/**").permitAll()
                                 .requestMatchers("/ecomApi/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/ecomApi/seller/**").hasAnyRole("ADMIN","SELLER")
+                                //.requestMatchers("/api/admin/**").permitAll()
                                 .requestMatchers("/ecomApi/public/**").permitAll()
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/ecomApi/test/**").permitAll()
@@ -94,7 +95,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web -> web.ignoring().requestMatchers("/v1/ecomApi-docs",
+        return (web -> web.ignoring().requestMatchers("/v2/api-docs",
                 "/configuration/ui",
                 "/swagger-resources/**",
                 "/configuration/security",
