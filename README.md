@@ -140,7 +140,7 @@ Backend API para una plataforma de e-commerce desarrollada con **Spring Boot 3.5
 | Rol | Permisos |
 |-----|----------|
 | `ROLE_USER` | Acceso a endpoints públicos, carrito, pedidos propios |
-| `ROLE_SELLER` | Gestión de productos propios + permisos USER |
+| `ROLE_SELLER` | Gestión de productos/pedidos propios (rutas `/seller/**` compartidas con Admin) + permisos USER |
 | `ROLE_ADMIN` | Acceso total: usuarios, categorías, analytics, etc |
 
 ## API Endpoints
@@ -157,63 +157,71 @@ Backend API para una plataforma de e-commerce desarrollada con **Spring Boot 3.5
 | GET | `/user` | Detalles usuario actual | Sí |
 | GET | `/sellers` | Listar vendedores (paginado) | Admin |
 
-#### Productos (`/public/products`, `/admin/products`, `/seller/products`)
+#### Productos (`/public/products`, `/admin/products`, `/seller/products`, `/admin/categories`, `/seller/categories`)
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| GET | `/public/products` | Listar productos (paginado, filtros) | No |
-| GET | `/public/products/{id}` | Detalle producto | No |
-| POST | `/seller/products` | Crear producto | Seller/Admin |
-| PUT | `/seller/products/{id}` | Actualizar producto | Seller/Admin |
-| DELETE | `/seller/products/{id}` | Eliminar producto | Seller/Admin |
-| GET | `/admin/products` | Admin: todos productos | Admin |
+| GET | `/public/products` | Listar productos (paginado, filtros: `keyword`, `category`) | No |
+| GET | `/public/products/keyword/{keyword}` | Buscar productos por palabra clave (paginado) | No |
+| GET | `/public/categories/{categoryId}/products` | Listar productos por categoría (paginado) | No |
+| GET | `/admin/products` | Admin: todos los productos (paginado) | Admin |
+| GET | `/seller/products` | Seller: productos (paginado) | Seller/Admin |
+| POST | `/admin/categories/{categoryId}/product` | Crear producto en una categoría | Admin |
+| POST | `/seller/categories/{categoryId}/product` | Crear producto en una categoría | Seller/Admin |
+| PUT | `/admin/products/{productId}` | Actualizar producto | Admin |
+| PUT | `/seller/products/{productId}` | Actualizar producto | Seller/Admin |
+| PUT | `/admin/products/{productId}/image` | Actualizar imagen del producto (`multipart`, campo `image`) | Admin |
+| PUT | `/seller/products/{productId}/image` | Actualizar imagen del producto (`multipart`, campo `image`) | Seller/Admin |
+| DELETE | `/admin/products/{productId}` | Eliminar producto | Admin |
+| DELETE | `/seller/products/{productId}` | Eliminar producto | Seller/Admin |
 
 #### Categorías (`/public/categories`, `/admin/categories`)
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| GET | `/public/categories` | Listar categorías | No |
-| GET | `/public/categories/{id}` | Detalle categoría | No |
+| GET | `/public/categories` | Listar categorías (paginado) | No |
 | POST | `/admin/categories` | Crear categoría | Admin |
-| PUT | `/admin/categories/{id}` | Actualizar categoría | Admin |
-| DELETE | `/admin/categories/{id}` | Eliminar categoría | Admin |
+| PUT | `/admin/categories/{categoryId}` | Actualizar categoría | Admin |
+| DELETE | `/admin/categories/{categoryId}` | Eliminar categoría | Admin |
 
-#### Carrito (`/cart`)
+#### Carrito (`/cart`, `/carts`)
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| GET | `/cart` | Ver carrito | Usuario |
-| POST | `/cart/add` | Agregar item | Usuario |
-| PUT | `/cart/item/{id}` | Actualizar cantidad | Usuario |
-| DELETE | `/cart/item/{id}` | Eliminar item | Usuario |
-| DELETE | `/cart/clear` | Vaciar carrito | Usuario |
+| POST | `/carts/products/{productId}/quantity/{quantity}` | Agregar producto al carrito con cantidad | Usuario |
+| POST | `/cart/create` | Crear/actualizar carrito con lista de `CartItemDTO` | Usuario |
+| GET | `/carts` | Listar todos los carritos | Usuario |
+| GET | `/carts/users/cart` | Obtener carrito del usuario actual | Usuario |
+| PUT | `/cart/products/{productId}/quantity/{operation}` | Actualizar cantidad (`operation` = `delete` reduce, otro incrementa) | Usuario |
+| DELETE | `/carts/{cartId}/product/{productId}` | Eliminar producto del carrito | Usuario |
 
-#### Pedidos (`/orders`, `/admin/orders`)
+#### Pedidos (`/order`, `/admin/orders`, `/seller/orders`)
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| POST | `/orders` | Crear pedido desde carrito | Usuario |
-| GET | `/orders` | Mis pedidos (paginado) | Usuario |
-| GET | `/orders/{id}` | Detalle pedido | Usuario |
-| PUT | `/admin/orders/{id}/status` | Actualizar estado | Admin |
-| GET | `/admin/orders` | Todos pedidos | Admin |
+| POST | `/order/users/payments/{paymentMethod}` | Crear pedido (body: `OrderRequestDTO`) | Usuario |
+| POST | `/order/stripe-client-secret` | Crear PaymentIntent de Stripe (body: `StripePaymentDTO`) | Usuario |
+| GET | `/admin/orders` | Listar todos los pedidos (paginado) | Admin |
+| GET | `/seller/orders` | Listar pedidos del seller (paginado) | Seller/Admin |
+| PUT | `/admin/orders/{orderId}/status` | Actualizar estado del pedido (body: `OrderStatusUpdateDTO`) | Admin |
+| PUT | `/seller/orders/{orderId}/status` | Actualizar estado del pedido (body: `OrderStatusUpdateDTO`) | Seller/Admin |
 
-#### Direcciones (`/addresses`)
+#### Direcciones (`/addresses`, `/users/addresses`)
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| GET | `/addresses` | Mis direcciones | Usuario |
-| POST | `/addresses` | Agregar dirección | Usuario |
-| PUT | `/addresses/{id}` | Actualizar dirección | Usuario |
-| DELETE | `/addresses/{id}` | Eliminar dirección | Usuario |
+| GET | `/addresses` | Listar todas las direcciones | Usuario |
+| GET | `/addresses/{addressId}` | Detalle de una dirección | Usuario |
+| GET | `/users/addresses` | Listar direcciones del usuario actual | Usuario |
+| POST | `/addresses` | Agregar dirección (body: `AddressDTO`) | Usuario |
+| PUT | `/addresses/{addressId}` | Actualizar dirección | Usuario |
+| DELETE | `/addresses/{addressId}` | Eliminar dirección | Usuario |
 
-#### Pagos Stripe (`/payments`)
+#### Pagos Stripe (`/order`)
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| POST | `/payments/create-payment-intent` | Crear PaymentIntent | Usuario |
-| POST | `/payments/webhook` | Webhook Stripe | No (Stripe) |
+| POST | `/order/stripe-client-secret` | Crear PaymentIntent de Stripe (body: `StripePaymentDTO`) | Usuario |
+| POST | `/order/users/payments/{paymentMethod}` | Confirmar pedido con método de pago (`online` para Stripe, otro para otros) | Usuario |
 
-#### Analytics (`/admin/analytics`)
+#### Analytics (`/admin/app/analytics`)
 | Método | Endpoint | Descripción | Auth |
 |--------|----------|-------------|------|
-| GET | `/admin/analytics/summary` | Resumen ventas/usuarios | Admin |
-| GET | `/admin/analytics/top-products` | Productos top | Admin |
-| GET | `/admin/analytics/sales-by-period` | Ventas por período | Admin |
+| GET | `/admin/app/analytics` | Datos de analytics del dashboard (resumen general) | Admin |
 
 ## Documentación API
 
@@ -232,7 +240,7 @@ Backend API para una plataforma de e-commerce desarrollada con **Spring Boot 3.5
 
 ## Configuración
 
-### Variables Principales (`application.properties`)
+### Variables Principales (`application.properties` → `${...}` resueltas desde `.env`)
 
 ```properties
 # Aplicación
@@ -240,15 +248,19 @@ spring.application.name=backend
 spring.web.locale=en_US
 
 # JWT
-spring.app.jwtSecret=<secret-key-256-bits>
-spring.app.jwtExpirationMs=300000000
-spring.ecom.app.jwtCookieName=ecomm-cookie
+spring.app.jwtSecret=${SPRING_APP_JWT_SECRET}
+spring.app.jwtExpirationMs=${SPRING_APP_JWT_EXPIRATION_MS}
+spring.ecom.app.jwtCookieName=${SPRING_ECOM_APP_JWT_COOKIE_NAME}
+
+# Seguridad Spring (basic auth)
+spring.security.user.name=${SPRING_SECURITY_USER_NAME}
+spring.security.user.password=${SPRING_SECURITY_USER_PASSWORD}
 
 # Base de Datos MySQL
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-spring.datasource.url=jdbc:mysql://localhost:3306/ecomm?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima
-spring.datasource.username=root
-spring.datasource.password=0000
+spring.datasource.url=${SPRING_DATASOURCE_URL}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
 
 # JPA/Hibernate
 spring.jpa.hibernate.ddl-auto=validate
@@ -257,10 +269,28 @@ spring.jpa.hibernate.ddl-auto=validate
 image.base.url=http://localhost:8080/images
 project.image=images/
 
+# Frontend (para CORS en WebMvcConfig)
+frontend.url=${FRONTEND_URL}
+
 # Stripe
-stripe.secret.key=sk_test_...
+stripe.secret.key=${STRIPE_SECRET_KEY}
 ```
 
+### `.env` (no versionado)
+```properties
+SPRING_SECURITY_USER_NAME=...
+SPRING_SECURITY_USER_PASSWORD=...
+SPRING_APP_JWT_SECRET=...
+SPRING_APP_JWT_EXPIRATION_MS=300000000
+SPRING_ECOM_APP_JWT_COOKIE_NAME=ecomm-cookie
+SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/ecomm?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima
+SPRING_DATASOURCE_USERNAME=...
+SPRING_DATASOURCE_PASSWORD=...
+FRONTEND_URL=http://localhost:5173/
+IMAGE_BASE_URL=http://localhost:8080/images
+PROJECT_IMAGE=images/
+STRIPE_SECRET_KEY=...
+```
 ## Principales Funcionalidades
 
 ###  Catálogo y Productos
@@ -290,10 +320,6 @@ stripe.secret.key=sk_test_...
 - Login con JWT en cookie HttpOnly
 - Roles: USER, SELLER, ADMIN (inicializados en arranque)
 - Perfil de usuario y direcciones múltiples
-
-### Archivos Estáticos
-- Servicio de imágenes en `/images/**`
-- Configuración CORS habilitada
 
 ### Seguridad
 - JWT Stateless con expiración configurable
