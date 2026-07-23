@@ -23,6 +23,5 @@ public class SignUpRequest {
     @NotBlank
     private String password;
 
-    @NotNull
     private Set<String> roles;
 }

@@ -48,7 +48,7 @@ public class JwtUtils {
     public ResponseCookie generateJwtCookie(UserDetailsImpl mainUser) {
         String jwt = generateTokenFromUsername(mainUser.getUsername());
         return ResponseCookie.from(jwtCookie, jwt)
-                             .path("/ecommApi")
+                             .path("/ecomApi")
                              .maxAge(24 * 60 * 60)
                              .httpOnly(false)
                              .secure(false)
@@ -57,7 +57,7 @@ public class JwtUtils {
 
     public ResponseCookie getCleanJwtCookie() {
         return ResponseCookie.from(jwtCookie, null)
-                             .path("/ecommApi")
+                             .path("/ecomApi")
                              .build();
     }
 
