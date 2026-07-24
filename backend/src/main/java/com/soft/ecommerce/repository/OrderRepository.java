@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
@@ -31,4 +33,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o")
     Double getTotalRevenue();
+
+    Page<Order> findByEmail(String email, Pageable pageable);
+
+    Optional<Order> findByIdAndEmail(Long orderId, String email);
 }

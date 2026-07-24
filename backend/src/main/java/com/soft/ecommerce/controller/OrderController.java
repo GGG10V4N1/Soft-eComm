@@ -4,6 +4,7 @@ import com.soft.ecommerce.config.AppConstants;
 import com.soft.ecommerce.payload.*;
 import com.soft.ecommerce.service.api.OrderService;
 import com.soft.ecommerce.service.api.StripeService;
+import com.soft.ecommerce.utils.AuthUtil;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import org.springframework.http.HttpStatus;
@@ -16,10 +17,12 @@ public class OrderController {
 
     private final OrderService orderService;
     private final StripeService stripeService;
+    private final AuthUtil authUtil;
 
-    public OrderController(OrderService orderService, StripeService stripeService) {
+    public OrderController(OrderService orderService, StripeService stripeService, AuthUtil authUtil) {
         this.orderService = orderService;
         this.stripeService = stripeService;
+        this.authUtil = authUtil;
     }
 
     @PostMapping("/order/users/payments/{paymentMethod}")
@@ -74,6 +77,26 @@ public class OrderController {
                                                             @RequestBody OrderStatusUpdateDTO orderStatusUpdateDTO) {
 
         OrderDTO order = orderService.updateOrder(orderId, orderStatusUpdateDTO.getStatus());
+        return ResponseEntity.status(HttpStatus.OK).body(order);
+    }
+
+    @GetMapping("/order/users")
+    public ResponseEntity<PageResponse<OrderDTO>> findUserOrders(
+            @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(name = "sortBy", defaultValue = AppConstants.SORT_ORDERS_BY, required = false) String sortBy,
+            @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR, required = false) String sortOrder) {
+
+        String email = authUtil.loggedInEmail();
+        PageResponse<OrderDTO> orderResponse = orderService.findOrdersByUserEmail(email, pageNumber, pageSize, sortBy, sortOrder);
+        return ResponseEntity.status(HttpStatus.OK).body(orderResponse);
+    }
+
+    @GetMapping("/order/users/{orderId}")
+    public ResponseEntity<OrderDTO> findUserOrderById(@PathVariable Long orderId) {
+
+        String email = authUtil.loggedInEmail();
+        OrderDTO order = orderService.findOrderByIdForUser(orderId, email);
         return ResponseEntity.status(HttpStatus.OK).body(order);
     }
 }

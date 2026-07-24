@@ -142,4 +142,19 @@ public class OrderServiceImpl implements OrderService {
         return RefactorMethods.getPageResponse(orderPage, order -> modelMapper.map(order, OrderDTO.class),
                                   "NO ORDERS HAVE BEEN PLACED YET");
     }
+
+    @Override
+    public PageResponse<OrderDTO> findOrdersByUserEmail(String email, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+        Pageable pageDetails = RefactorMethods.buildPageable(pageNumber, pageSize, sortBy, sortOrder);
+        Page<Order> orderPage = orderRepository.findByEmail(email, pageDetails);
+        return RefactorMethods.getPageResponse(orderPage, order -> modelMapper.map(order, OrderDTO.class),
+                                  "YOU HAVE NOT PLACED ANY ORDERS YET");
+    }
+
+    @Override
+    public OrderDTO findOrderByIdForUser(Long orderId, String email) {
+        Order order = orderRepository.findByIdAndEmail(orderId, email)
+                                     .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        return modelMapper.map(order, OrderDTO.class);
+    }
 }
